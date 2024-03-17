@@ -124,7 +124,7 @@ anim_save("./04_animate_gifs/sixth_saved_animation_logo_animate2.gif", height = 
 
 # https://happygitwithr.com/rstudio-git-github
 
-# 7 Oscar tiled----
+# 4 Oscar tiled----
 
 # https://blog.djnavarro.net/posts/2021-10-19_rtistry-posts/
 # https://fronkonstin.com
@@ -338,8 +338,110 @@ for (i in 1:20){
 }
 
 # Last tweaks
-plot_b_of_f +
+plot_b_of_f_animate <- plot_b_of_f +
   coord_fixed() +
   scale_y_reverse() +
-  theme_void() -> plot_b_of_f
+  theme_void() + 
+  transition_states(z, transition_length = 3, state_length = 3, wrap = FALSE) + 
+  shadow_mark() +
+  enter_fade() +
+  exit_fade()
+
+animate(plot_b_of_f_animate, fps = 30, duration = 20, end_pause = 100)
+
+# Last tweaks
+plot_oscar_animate <- plot +
+  coord_fixed() +
+  scale_y_reverse() +
+  theme_void() + 
+  transition_states(z, transition_length = 3, state_length = 3, wrap = FALSE) + 
+  shadow_mark() +
+  enter_fade() +
+  exit_fade()
+
+animate(plot_oscar_animate, fps = 30, duration = 20, end_pause = 100)
+
+# gil photo
+
+# Point to the place where your image is stored
+gil <- './00_raw_data/gil_cropped.jpg'
+
+# Load and convert to grayscale
+load.image(gil) %>%
+  grayscale() -> img_gil
+
+plot(img_gil)
+
+# The image is summarized into s x s squares 
+s <- 52.5
+
+# Resume pixels using mean: this decreases drastically the resolution of the image
+img_gil %>% 
+  as.data.frame() %>%
+  mutate(x = cut(x, round(dim(img_gil)[1]/s, 0), labels = FALSE),
+         y = cut(y, round(dim(img_gil)[2]/s, 0), labels = FALSE)) %>%
+  group_by(x, y) %>%
+  summarise(value = mean(value)) -> df_gil
+
+# Create new variable to be used to define size and color of the lines of tiles
+df_gil %>% mutate(z = cut(value, breaks = 20, labels = FALSE)) -> df_gil
+
+# Initialize plot 
+
+plot_gil <- ggplot()
+
+pal <- colorRampPalette(c("steelblue4", "gray100"))
+colours <- pal(20)
+colours
+colours[1]
+
+pal_fill <- colorRampPalette(c("olivedrab3", "turquoise2"))
+colours_fill <- pal_fill(20)
+
+# Resulting plot will be build with 20 layers: one layer per each different value of z 
+for (i in 1:20){
+  sub_data = df_gil %>% filter(z==i)
+  plot_gil <- plot_gil + geom_tile(aes(x, y),
+                                         size = 2*i/(20-1)-2/(20-1),
+                                         fill = "olivedrab3",
+                                         col = paste0("gray", round(((100-5)*i)/(20-1)+5-(100-5)/(20-1), 0)),
+                                         data = df_gil %>% filter(z==i))
+}
+
+for (i in 1:20){
+  sub_data = df_gil %>% filter(z==i)
+  plot_gil <- plot_gil + geom_tile(aes(x, y),
+                                   size = 2*i/(20-1)-2/(20-1),
+                                   fill = colours_fill[i],
+                                   col = colours[i],
+                                   data = df_gil %>% filter(z==i))
+}
+
+# Last tweaks
+plot_gil_animate <- plot_gil +
+  coord_fixed() +
+  scale_y_reverse() +
+  theme_void() 
+# + transition_states(z, transition_length = 3, state_length = 3, wrap = FALSE) + 
+#   shadow_mark() +
+#   enter_fade() +
+#   exit_fade()
+
+plot_gil_animate
+
+animate(plot_gil_animate, fps = 30, duration = 20, end_pause = 100)
+
+# Last tweaks
+plot_oscar_animate <- plot +
+  coord_fixed() +
+  scale_y_reverse() +
+  theme_void() + 
+  transition_states(z, transition_length = 3, state_length = 3, wrap = FALSE) + 
+  shadow_mark() +
+  enter_fade() +
+  exit_fade()
+
+animate(plot_oscar_animate, fps = 30, duration = 20, end_pause = 100)
+
+
 
