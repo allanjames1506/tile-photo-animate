@@ -302,7 +302,7 @@ plot_two_animate + transition_components(case_when(image == 'oscar' ~ x, TRUE ~ 
 plot_oscar / plot_no81
 
 # Point to the place where your image is stored
-b_of_f <- './00_raw_data/bride_of_frankenstein.jpeg'
+b_of_f <- './00_raw_data/bride_of_frankenstein2_cropped.jpeg'
 
 # Load and convert to grayscale
 load.image(b_of_f) %>%
@@ -311,7 +311,7 @@ load.image(b_of_f) %>%
 plot(img_b_of_f)
 
 # The image is summarized into s x s squares 
-s <- 3
+s <- 10
 
 # Resume pixels using mean: this decreases drastically the resolution of the image
 img_b_of_f %>% 
@@ -324,16 +324,26 @@ img_b_of_f %>%
 # Create new variable to be used to define size and color of the lines of tiles
 df_b_of_f %>% mutate(z = cut(value, breaks = 20, labels = FALSE)) -> df_b_of_f
 
-# Initialize plot 
+#df_b_of_f <- df_b_of_f %>% group_by(x) %>% slice_sample(n = 45) %>% ungroup()
+
 plot_b_of_f <- ggplot()
+
+pal_b_of_f <- colorRampPalette(c("steelblue4", "mistyrose"))
+colours_b_of_f <- pal_b_of_f(20)
+colours_b_of_f
+colours_b_of_f[1]
+
+pal_fill_b_of_f <- colorRampPalette(c("olivedrab4", "deeppink"))
+colours_fill_b_of_f <- pal_fill_b_of_f(20)
+colours_fill_b_of_f
 
 # Resulting plot will be build with 20 layers: one layer per each different value of z 
 for (i in 1:20){
   sub_data = df_b_of_f %>% filter(z==i)
   plot_b_of_f <- plot_b_of_f + geom_tile(aes(x, y),
                                          size = 2*i/(20-1)-2/(20-1),
-                                         fill = "#E27231",
-                                         col = paste0("gray", round(((100-5)*i)/(20-1)+5-(100-5)/(20-1), 0)),
+                                         fill = colours_fill_b_of_f[i],
+                                         col = colours_b_of_f[i],
                                          data = df_b_of_f %>% filter(z==i))
 }
 
@@ -341,13 +351,19 @@ for (i in 1:20){
 plot_b_of_f_animate <- plot_b_of_f +
   coord_fixed() +
   scale_y_reverse() +
-  theme_void() + 
-  transition_states(z, transition_length = 3, state_length = 3, wrap = FALSE) + 
-  shadow_mark() +
-  enter_fade() +
-  exit_fade()
+  theme_void() 
+# + 
+#   transition_states(z, transition_length = 3, state_length = 3, wrap = FALSE) + 
+#   shadow_mark() +
+#   enter_fade() +
+#   exit_fade()
+
+plot_b_of_f_animate
 
 animate(plot_b_of_f_animate, fps = 30, duration = 20, end_pause = 100)
+
+ggsave('./03_plots/b_of_f_tiled.png', plot, height =  8 , width =  6)
+
 
 # Last tweaks
 plot_oscar_animate <- plot +
@@ -390,7 +406,7 @@ df_gil %>% mutate(z = cut(value, breaks = 20, labels = FALSE)) -> df_gil
 
 plot_gil <- ggplot()
 
-pal <- colorRampPalette(c("steelblue4", "gray100"))
+pal <- colorRampPalette(c("steelblue4", "mistyrose"))
 colours <- pal(20)
 colours
 colours[1]
@@ -422,7 +438,8 @@ plot_gil_animate <- plot_gil +
   coord_fixed() +
   scale_y_reverse() +
   theme_void() 
-# + transition_states(z, transition_length = 3, state_length = 3, wrap = FALSE) + 
+# + 
+#   transition_states(z, transition_length = 3, state_length = 3, wrap = FALSE) +
 #   shadow_mark() +
 #   enter_fade() +
 #   exit_fade()
@@ -431,17 +448,9 @@ plot_gil_animate
 
 animate(plot_gil_animate, fps = 30, duration = 20, end_pause = 100)
 
-# Last tweaks
-plot_oscar_animate <- plot +
-  coord_fixed() +
-  scale_y_reverse() +
-  theme_void() + 
-  transition_states(z, transition_length = 3, state_length = 3, wrap = FALSE) + 
-  shadow_mark() +
-  enter_fade() +
-  exit_fade()
+ggsave('./03_plots/gill_tiled.png', plot, height =  8 , width =  6)
 
-animate(plot_oscar_animate, fps = 30, duration = 20, end_pause = 100)
+
 
 
 
